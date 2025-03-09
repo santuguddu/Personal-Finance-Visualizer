@@ -1,16 +1,17 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 
-// PUT Method: Update a transaction
+// Update the PUT handler with correct typing
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } } // Use 'context' for dynamic params
 ) {
+  const { id } = context.params; // Extract `id` from context.params
+
   try {
     // Validate ObjectId
-    if (!ObjectId.isValid(params.id)) {
+    if (!ObjectId.isValid(id)) {
       return NextResponse.json(
         { error: "Invalid transaction ID" },
         { status: 400 }
@@ -44,7 +45,7 @@ export async function PUT(
 
     // Find and update the transaction
     const result = await collection.findOneAndUpdate(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(id) },
       { $set: updatedTransaction },
       { returnDocument: "after" } // Return the updated document
     );
