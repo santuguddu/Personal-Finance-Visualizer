@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import clientPromise from "@/lib/mongodb";
 
-// Update the PUT handler with correct typing
+// PUT Method: Update a transaction
 export async function PUT(
   request: Request,
-  context: { params: { id: string } } // Use 'context' for dynamic params
+  { params }: { params: { id: string } }
 ) {
-  const { id } = context.params; // Extract `id` from context.params
+  const { id } = params; // Get `id` from params
 
   try {
     // Validate ObjectId
@@ -63,6 +63,48 @@ export async function PUT(
       message: "Transaction updated",
       transaction: result.value,
     });
+  } catch (error) {
+    console.error(error); // Log the error for debugging
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE Method: Delete a transaction
+export async function DELETE(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  const { id } = params; // Get `id` from params
+
+  try {
+    // Validate ObjectId
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { error: "Invalid transaction ID" },
+        { status: 400 }
+      );
+    }
+
+    // Connect to the MongoDB client
+    const client = await clientPromise;
+    const db = client.db();
+    const collection = db.collection("transactions");
+
+    // Delete the transaction
+    const result = await collection.deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json(
+        { error: "Transaction not found" },
+        { status: 404 }
+      );
+    }
+
+    // Return the success response
+    return NextResponse.json({ message: "Transaction deleted" });
   } catch (error) {
     console.error(error); // Log the error for debugging
     return NextResponse.json(
